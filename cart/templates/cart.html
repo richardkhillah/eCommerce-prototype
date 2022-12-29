@@ -5,6 +5,17 @@
 {% block content %}
     <!-- ============================ COMPONENT 1 ================================= -->
 
+{% if not cart_items %}
+    <div class="my-5">
+        <h2 class="text-center">Your cart is empty.</h2>
+        <br>
+        <div class="text-center">
+            <a href="{% url 'store' %}" class="btn btn-primary">Continue shopping...</a>
+        </div>
+    </div>
+{% else %}
+
+    
 <div class="row">
 	<aside class="col-lg-9">
 <div class="card">
@@ -63,23 +74,24 @@
 </tbody>
 </table>
 </div> <!-- card.// -->
-
 	</aside> <!-- col.// -->
+
 	<aside class="col-lg-3">
 
 		<div class="card">
 		<div class="card-body">
 			<dl class="dlist-align">
-			  <dt>Total price:</dt>
-			  <dd class="text-right">${{ total }}</dd>
+                <dt>Total price:</dt>
+                <dd class="text-right">${{ total }}</dd>
+              
 			</dl>
 			<dl class="dlist-align">
-			  <dt>Tax:</dt>
-			  <dd class="text-right"> ${{ tax }}</dd>
+                <dt>Tax:</dt>
+                <dd class="text-right"> ${{ tax }}</dd>
 			</dl>
 			<dl class="dlist-align">
-			  <dt>Total:</dt>
-			  <dd class="text-right text-dark b"><strong>${{ grand_total }}</strong></dd>
+                <dt>Total:</dt>
+                <dd class="text-right text-dark b"><strong>${{ grand_total }}</strong></dd>
 			</dl>
 			<hr>
 			<p class="text-center mb-3">
@@ -90,10 +102,9 @@
 		</div> <!-- card-body.// -->
 		</div> <!-- card.// -->
 
-</aside> <!-- col.// -->
-
-
+    </aside> <!-- col.// -->
 </div> <!-- row.// -->
+{% endif %}
 <!-- ============================ COMPONENT 1 END .// ================================= -->
 {% endblock content %}
     
