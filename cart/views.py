@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect, get_object_or_404
 # from django.http import HttpResponse
 
@@ -69,9 +70,11 @@ def cart(request, total=0, quantity=0, cart_items=None):
             quantity += cart_item.quantity
         tax = 0.095 * total
         grand_total = total + tax
-    except Cart.DoesNotExist:
-        # Fix this
-        pass
+    except ObjectDoesNotExist:
+        #TODO: Fix this Make handling better
+        tax=0
+        grand_total=0
+
     context = {
         'total': total,
         'tax': tax,
