@@ -77,7 +77,8 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 
                 # Additional context processors allow global use in templates
-                'category.context_processors.menu_links'
+                'category.context_processors.menu_links',
+                'cart.context_processors.counter',
             ],
         },
     },
