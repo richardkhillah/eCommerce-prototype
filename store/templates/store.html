@@ -143,6 +143,8 @@
                                         <img src="{{ product.image.url }}">
                                     </a>
                                 </div> <!-- img-wrap.// -->
+                                
+                                <!-- Product Overview -->
                                 <figcaption class="info-wrap">
                                     <div class="fix-height">
                                         <a href="{{ product.get_url }}" class="title">{{ product.product_name }}</a>
@@ -151,9 +153,9 @@
                                             <!-- <del class="price-old">$1980</del> -->
                                         </div> <!-- price-wrap.// -->
                                     </div>
-                                    <a href="#" class="btn btn-block btn-primary">Add to cart </a>
+                                    <a href="{% url 'add_cart' product.id %}" class="btn btn-block btn-primary">Add to cart </a>
                                 </figcaption>
-                            </figure>
+                            </figure> <!-- end product overview -->
                         </div> <!-- col.// -->
                     {% endfor %}
                         
