@@ -69,7 +69,8 @@ def cart(request, total=0, quantity=0, cart_items=None):
             quantity += cart_item.quantity
         tax = 0.095 * total
         grand_total = total + tax
-    except Cart.ObjectNotExist:
+    except Cart.DoesNotExist:
+        # Fix this
         pass
     context = {
         'total': total,
