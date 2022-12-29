@@ -41,3 +41,7 @@ def product_detail(request, category_slug, product_slug):
         'in_cart': in_cart,
     }
     return render(request, 'product_detail.html', context=context)
+
+def search(request):
+    from django.http import HttpResponse
+    return HttpResponse('store page')
