@@ -6,7 +6,12 @@
 <!-- ========================= SECTION PAGETOP ========================= -->
 <section class="section-pagetop bg">
     <div class="container">
-        <h2 class="title-page">Our Store</h2>
+        
+        {% if 'search' in request.path %}
+            <h2 class="title-page">Search Result{{ products.count|pluralize }}</h2>
+        {% else %}
+            <h2 class="title-page">Our Store</h2>
+        {% endif %}
         
     </div> <!-- container //  -->
 </section>
@@ -127,12 +132,14 @@
             <!-- Results list -->
             <main class="col-md-9">
 
+                <!-- Items Found Quantity -->
                 <header class="border-bottom mb-4 pb-3">
                     <div class="form-inline">
                         <span class="mr-md-auto">Found <b>{{ products.count }}</b> Item{{ products.count|pluralize }}</span>
                     </div>
                 </header><!-- sect-heading -->
 
+                <!-- Product List -->
                 <div class="row">
                     {% for product in products %}
                         <div class="col-md-4">
@@ -157,11 +164,15 @@
                                 </figcaption>
                             </figure> <!-- end product overview -->
                         </div> <!-- col.// -->
+                    {% empty %}
+                        <div>
+                            <h2>No results for <b>"{{ request.GET.keyword }}"</b></h2>
+                        </div>
                     {% endfor %}
                         
                 </div> <!-- row .// -->
 
-
+                <!-- Pagination Buttons -->
                 <nav class="mt-4" aria-label="Page navigation sample">
                     
                     {% if products.has_other_pages %}
