@@ -1,4 +1,5 @@
 from django.contrib import auth, messages
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.shortcuts import render, redirect
 
@@ -46,7 +47,7 @@ def login(request):
 
         if user is not None:
             auth.login(request, user)
-            messages.success(request, 'You are logged in.')
+            # messages.success(request, 'You are logged in.')
             return redirect('home')
         else:
             messages.error(request, 'Invalid login credentials.')
@@ -54,6 +55,8 @@ def login(request):
 
     return render(request, 'login.html')
 
+@login_required(login_url='login')
 def logout(request):
-    
-    return 
+    auth.logout(request)
+    messages.success(request, 'You are logged out.')
+    return redirect('login')
