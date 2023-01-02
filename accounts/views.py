@@ -1,4 +1,6 @@
-from django.shortcuts import render
+from django.contrib import auth, messages
+from django.db import IntegrityError
+from django.shortcuts import render, redirect
 
 from .forms import RegistrationForm
 from .models import Account
@@ -14,15 +16,20 @@ def register(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             username = email.split('@')[0]
-            user = Account(
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email,
-                    username=username,
-                    password=password
-            )
-            user.phone_number = phone_number
-            user.save()
+            try:
+                user = Account(
+                        first_name=first_name,
+                        last_name=last_name,
+                        email=email,
+                        username=username,
+                        password=password
+                )
+                user.phone_number = phone_number
+                user.save()
+                messages.success(request, "Registration successful.")
+            except IntegrityError as ie:
+                messages.error(request, ie)
+            return redirect('register')
     else:
         form = RegistrationForm()
     context = {
@@ -31,7 +38,22 @@ def register(request):
     return render(request, 'register.html', context=context)
 
 def login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        user = auth.authenticate(email=email, password=password)
+
+        if user is not None:
+            auth.login(request, user)
+            messages.success(request, 'You are logged in.')
+            return redirect('home')
+        else:
+            messages.error(request, 'Invalid login credentials.')
+            return redirect('login')
+
     return render(request, 'login.html')
 
 def logout(request):
+    
     return 

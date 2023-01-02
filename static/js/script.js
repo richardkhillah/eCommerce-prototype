@@ -50,11 +50,11 @@ $(document).ready(function() {
 	if($('[data-toggle="tooltip"]').length>0) {  // check if element exists
 		$('[data-toggle="tooltip"]').tooltip()
 	} // end if
-
-
-
-
     
 }); 
 // jquery end
 
+
+setTimeout(function(){
+    $('#message').fadeOut('slow')
+}, 4500); // 4.5 secound fadeout
