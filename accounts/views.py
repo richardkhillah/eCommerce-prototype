@@ -24,7 +24,7 @@ def register(request):
             password = form.cleaned_data['password']
             username = email.split('@')[0]
             try:
-                user = Account(
+                user = Account.objects.create_user(
                         first_name=first_name,
                         last_name=last_name,
                         email=email,
