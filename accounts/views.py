@@ -97,6 +97,39 @@ def logout(request):
     messages.success(request, 'You are logged out.')
     return redirect('login')
 
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if Account.objects.filter(email=email).exists():
+            user = Account.objects.get(email__iexact=email)
+            
+            # Send reset token
+            current_site = get_current_site(request)
+            mail_subject = 'Please Reset Your Password'
+            message = render_to_string('passowrd_reset_email.html', {
+                'user': user,
+                'domain': current_site,
+                # Force encoding user id so primary key can not be seen.
+                # Will be decoded during account activation.
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+            to_email = email
+            send_email = EmailMessage(subject=mail_subject, body=message, to=[to_email])
+            send_email.send()
+
+            # Alert the user
+            messages.success(request, "Password reset email has been set.")
+            return redirect('login')
+        else:
+            messages.error(request, "Account does not exist!")
+            return redirect('forgot_password')
+    return render(request, 'forgot_password.html')
+
+def reset_password_validate(request, uidb64, token):
+    from django.http import HttpResponse
+    return HttpResponse("reset_password_validate")
+
 @login_required(login_url='login')
 def dashboard(request):
     return render(request, 'dashboard.html')

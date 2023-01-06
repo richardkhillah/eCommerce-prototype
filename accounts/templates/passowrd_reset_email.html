@@ -1,0 +1,14 @@
+{# the safest way to render html email and protect from cross-site forgery #}
+{% autoescape off %}
+
+Hi {{ user.first_name }},
+
+As requested, please click the below link to reset your password:
+
+http://{{ domain }}{% url 'reset_password_validate' uidb64=uid token=token %}
+
+If you think this isn't you, please ignore this email.
+
+{% endautoescape %}
+
+{# TODO: we should have an unsubscribe or remove email from database link or something #}
