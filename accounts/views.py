@@ -127,8 +127,40 @@ def forgot_password(request):
     return render(request, 'forgot_password.html')
 
 def reset_password_validate(request, uidb64, token):
-    from django.http import HttpResponse
-    return HttpResponse("reset_password_validate")
+    # Decode and validate password reset token
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist) as e:
+        user = None
+    
+    # If decode and check successful, allow user to reset password
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid'] = uid
+        messages.success(request, 'Please reset your password')
+        return redirect('reset_password')
+
+    messages.error(request, 'Invalid activation link.')
+    return redirect('login')
+
+def reset_password(request):
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+
+        if password == password_confirm:
+            # get uid and user then set password, save, and redirect
+            uid = request.session['uid']
+            user = Account.objects.get(pk=uid)
+            user.set_password(password)
+            user.save()
+
+            messages.success(request, 'Your password was successfully reset!')
+            return redirect('login')
+        else:
+            messages.error(request, 'Passwords do not match.')
+            return redirect('reset_password')
+    return render(request, 'reset_password.html')
 
 @login_required(login_url='login')
 def dashboard(request):
