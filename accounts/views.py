@@ -82,6 +82,22 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
 
         if user is not None:
+            try:
+                # Get "anonymous" cart items before starting new session
+                # TODO: decouple this
+                from cart.models import Cart, CartItem
+                from cart.views import _cart_id
+
+                cart = Cart.objects.get(cart_id = _cart_id(request))
+                cart_items = CartItem.objects.filter(cart=cart)
+                if cart_items:
+                    for item in cart_items:
+                        item.user = user
+                        item.save()
+            except:
+                pass
+
+
             auth.login(request, user)
             messages.success(request, 'You are logged in.')
             return redirect('dashboard')
