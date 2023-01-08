@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 # Use custom auth model
 AUTH_USER_MODEL = 'accounts.Account'
 
+PASSWORD_RESET_TIMEOUT = 600 # 10 minutes in seconds
 
 # Application definition
 
