@@ -16,6 +16,54 @@ def _cart_id(request):
         cart = request.session.create()
     return cart
 
+def _add_user_to_cart(request, cart=None):
+    try:
+        if not cart:
+            cart = Cart.objects.get(cart_id=_cart_id(request))
+        cart.user = request.user
+        cart.save()
+    except Exception as e:
+        print(e)
+        cart = None
+    return cart
+
+
+def _update_carts(request, old_cart_id):
+    """Update anonymous and users previous cart id to match"""    
+    
+    users_cart = Cart.objects.filter(user__pk=request.user.id).first()
+    anonymous_cart = Cart.objects.filter(cart_id=old_cart_id).first()
+
+    try:
+        if users_cart and anonymous_cart:                
+            # ideally all of this will be atomic
+            # TODO: on update to postgresql use: https://docs.djangoproject.com/en/4.1/ref/models/querysets/#select-for-update
+            users_cart.cart_id = _cart_id(request)
+            users_cart.save()
+
+            # move anonymous cart items to users previoius cart
+            anonymous_cart_items = CartItem.objects.filter(cart=anonymous_cart)
+            for a_item in anonymous_cart_items:
+                a_item.cart = users_cart
+                a_item.save()
+            anonymous_cart.delete()
+
+        elif anonymous_cart:
+            # update anonymous cart id to current session and add
+            # authenticated user to anonymous cart
+            anonymous_cart.cart_id = _cart_id(request)
+            _add_user_to_cart(request, anonymous_cart)
+            users_cart = anonymous_cart
+        elif users_cart:
+            # update users previous cart id only
+            users_cart.cart_id = _cart_id(request)
+            users_cart.save()
+    except Exception as e:
+        print(e)
+        users_cart = None
+    finally:
+        return users_cart
+
 def add_item(request, product_id):
     """Increment cart item by one"""
     # Get the product variations from Post request
@@ -34,7 +82,7 @@ def add_item(request, product_id):
                 # Not a varient
                 pass
     
-    # Add the product to the cart
+    # Add the product to the cart, and if user is authenticated, assign user to cart
     cart, _ = Cart.objects.get_or_create(cart_id=_cart_id(request))
     cart_items = CartItem.objects.filter(product=product, cart=cart)
 

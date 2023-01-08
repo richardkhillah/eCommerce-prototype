@@ -12,6 +12,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .forms import RegistrationForm
 from .models import Account
 
+from cart.views import _cart_id, _add_user_to_cart, _update_carts
+
 # Create your views here.
 def register(request):
     if request.method == 'POST':
@@ -82,23 +84,12 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
 
         if user is not None:
-            try:
-                # Get "anonymous" cart items before starting new session
-                # TODO: decouple this
-                from cart.models import Cart, CartItem
-                from cart.views import _cart_id
-
-                cart = Cart.objects.get(cart_id = _cart_id(request))
-                cart_items = CartItem.objects.filter(cart=cart)
-                if cart_items:
-                    for item in cart_items:
-                        item.user = user
-                        item.save()
-            except:
-                pass
-
-
+            # if the user was shopping prior to loggin in, capture the cart used prior to
+            # logging in and transfer the cart to the logged in user.
+            anon_cart_id = _cart_id(request)
             auth.login(request, user)
+            _update_carts(request, anon_cart_id)
+
             messages.success(request, 'You are logged in.')
             return redirect('dashboard')
         else:
@@ -109,6 +100,9 @@ def login(request):
 
 @login_required(login_url='login')
 def logout(request):
+    # Cache user in cart so user can continue shopping on next login.
+    _add_user_to_cart(request)
+
     auth.logout(request)
     messages.success(request, 'You are logged out.')
     return redirect('login')
