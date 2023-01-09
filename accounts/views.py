@@ -1,3 +1,5 @@
+import requests
+
 from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
@@ -11,6 +13,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 from .forms import RegistrationForm
 from .models import Account
+
+from cart.views import _cart_id, _add_user_to_cart, _update_carts
 
 # Create your views here.
 def register(request):
@@ -82,8 +86,24 @@ def login(request):
         user = auth.authenticate(email=email, password=password)
 
         if user is not None:
+            # if the user was shopping prior to loggin in, capture the cart used prior to
+            # logging in and transfer the cart to the logged in user.
+            anon_cart_id = _cart_id(request)
             auth.login(request, user)
+            _update_carts(request, anon_cart_id)
+
             messages.success(request, 'You are logged in.')
+
+            # Redirect to the 
+            url = request.META.get('HTTP_REFERER')
+            try:
+                query = requests.utils.urlparse(url).query
+                params = dict(x.split('=') for x in query.split('&'))
+                if 'next' in params:
+                    return redirect(params['next'])
+                    # return redirect('dashboard')
+            except:
+                pass
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid login credentials.')
@@ -93,6 +113,9 @@ def login(request):
 
 @login_required(login_url='login')
 def logout(request):
+    # Cache user in cart so user can continue shopping on next login.
+    _add_user_to_cart(request)
+
     auth.logout(request)
     messages.success(request, 'You are logged out.')
     return redirect('login')
