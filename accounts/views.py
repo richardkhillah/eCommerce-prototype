@@ -100,8 +100,8 @@ def login(request):
                 query = requests.utils.urlparse(url).query
                 params = dict(x.split('=') for x in query.split('&'))
                 if 'next' in params:
-                    # return redirect(params['next'])
-                    return redirect('dashboard')
+                    return redirect(params['next'])
+                    # return redirect('dashboard')
             except:
                 pass
             return redirect('dashboard')

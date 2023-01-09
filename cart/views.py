@@ -27,7 +27,6 @@ def _add_user_to_cart(request, cart=None):
         cart = None
     return cart
 
-
 def _update_carts(request, old_cart_id):
     """Update anonymous and users previous cart id to match"""    
     
@@ -41,20 +40,48 @@ def _update_carts(request, old_cart_id):
             users_cart.cart_id = _cart_id(request)
             users_cart.save()
 
-            # move anonymous cart items to users previoius cart
+            # move anonymous cart items to users previous cart. First check whether
+            # the users previous cart contains the unique product, varient combination.
+            # If so, increment the already instanciated cart_item quantity by the 
+            # New varient quantity.
+            # Otherwise, move the product-varient combo to the users cart and add the
+            # variation to the existing_product_varients list
+            users_cart_items = CartItem.objects.filter(cart=users_cart)
+
+            existing_product_varients = [[item.product.id, *list(item.variations.all())] 
+                                            for item in users_cart_items]
+
             anonymous_cart_items = CartItem.objects.filter(cart=anonymous_cart)
+            
             for a_item in anonymous_cart_items:
-                a_item.cart = users_cart
-                a_item.save()
+                varient = [a_item.product.id, *list(a_item.variations.all())]
+                if varient in existing_product_varients:
+                    # Increment the cart_item quantity and save
+                    index = existing_product_varients.index(varient)
+                    existing_varient = users_cart_items[index]
+                    existing_varient.quantity += a_item.quantity
+                    existing_varient.save()
+                else:
+                    # Move the item over to the cart
+                    a_item.cart = users_cart
+                    a_item.save()
+                    existing_product_varients.append(varient)
+            # Declutter the database and get rid of the anonymous cart
             anonymous_cart.delete()
 
         elif anonymous_cart:
+            # This block executes only if 
+            # users_cart is None and anonymous_cart is not None
+            # 
             # update anonymous cart id to current session and add
             # authenticated user to anonymous cart
             anonymous_cart.cart_id = _cart_id(request)
             _add_user_to_cart(request, anonymous_cart)
             users_cart = anonymous_cart
         elif users_cart:
+            # This block executes only if
+            # users_cart is not None and anonymous_cart is None
+            # 
             # update users previous cart id only
             users_cart.cart_id = _cart_id(request)
             users_cart.save()
@@ -64,26 +91,34 @@ def _update_carts(request, old_cart_id):
     finally:
         return users_cart
 
-def add_item(request, product_id):
-    """Increment cart item by one"""
-    # Get the product variations from Post request
+def _get_post_request_variation(product_id, varients):
+    """Parse a dict for variations"""
     product = Product.objects.get(id=product_id)
-    product_variation = []
-    if request.method == 'POST':
-        for key, value in request.POST.items():
+    product_variations = []
+    if isinstance(varients, dict):
+        for key, value in varients.items():
             try:
                 # Filter out only the relevant information 
                 variation = Variation.objects.get(product=product, 
                                                 variation_category__iexact=key, 
                                                 variation_value__iexact=value)
                 # add the product variation
-                product_variation.append(variation)
+                product_variations.append(variation)
             except:
                 # Not a varient
                 pass
+    return product_variations
+
+def add_item(request, product_id):
+    """Increment cart item by one"""
+    # Get the product variations from Post request
+    product_variation = []
+    if request.method == 'POST':
+        product_variation = _get_post_request_variation(product_id, request.POST)
     
-    # Add the product to the cart, and if user is authenticated, assign user to cart
+    # Add the product to the cart
     cart, _ = Cart.objects.get_or_create(cart_id=_cart_id(request))
+    product = Product.objects.get(id=product_id)
     cart_items = CartItem.objects.filter(product=product, cart=cart)
 
     # If the variation already exists in the cart, increment the quantity
