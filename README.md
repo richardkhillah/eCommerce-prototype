@@ -8,7 +8,7 @@ I wanted end-to-end experience building a real commerce flow — from authentica
 Python, Django, PostgreSQL, JavaScript, Bootstrap, AWS (EC2, S3), PayPal REST API
 
 ## Running Locally
-bash```
+```bash
 git clone https://github.com/richardkhillah/eCommerce-prototype
 cd eCommerce-prototype
 pip install -r requirements.txt
